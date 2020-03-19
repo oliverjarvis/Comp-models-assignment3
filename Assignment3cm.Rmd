@@ -7,6 +7,9 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse, rethinking)
+sczdata <- read.csv("Ass3.csv")
 ```
 
 ## Assignment 3 - Exploring causal inference issues
@@ -31,9 +34,35 @@ The research questions you have to answer are the following:
 
 ## First part
 
-Q1.1) Does schizophrenia involved altercentric intrusion? Define model and priors. Test the implications of your priors (prior predictive checks) and if needed adjust them. Run the model. Test the quality of the fitted model (posterior predictive checks). Assess the evidence in favor of an increased altercentric intrusion in schizophrenia. Report the model and the results, including plots.
+Q1.1) Does schizophrenia involve altercentric intrusion? Define model and priors. Test the implications of your priors (prior predictive checks) and if needed adjust them. Run the model. Test the quality of the fitted model (posterior predictive checks). Assess the evidence in favor of an increased altercentric intrusion in schizophrenia. Report the model and the results, including plots.
 
+```{r}
+#1 is schizophrenia
+#alpha larger because it's weird
+#Otherwise change to maybe 1.5
+m1.1 <- map(
+  alist(
+    AltercentricIntrusion ~ dnorm(mu, sigma),
+    mu <- a + bs * Diagnosis,
+    a ~ dnorm(3, 1),
+    bs ~ dnorm(0, 0.3),
+    sigma ~ dunif(0, 5)
+  ), data=sczdata
+)
 
+#Checking implications of our priors
+#alpha
+plot(density(rnorm(1e4, 3, 1)))
+#bs. Difficult to say when we don't know how much it can affect it.
+plot(density(rnorm(1e4, 0, 0.3)))
+
+#check output from model
+precis(m1.1, digits=3)
+
+#posterior samples
+samples <- extract.samples(m1.1, n=1e5)
+precis(samples, digits=3)
+```
 
 Q1.2) Is altercentric intrusion related to specific symptoms *in the patients*? Identify which of the symptoms could be relevant. Should you include more than one symptom? Build models, priors, predictive checks. Assess the evidence and report models and results, including plots. Discuss whether the results make sense.
 
